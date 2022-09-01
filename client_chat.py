@@ -47,44 +47,6 @@ def text_traffic():
             print(response['msg'])
 
 
-# unused pylint: disable=broad-except
-def request_file():
-    try:
-        requested_name = processor.message['msg'].split(' ')[0]
-        output_name = processor.message['msg'].split(' ')[1]
-    except IndexError:
-        print('invalid prompt, try (requested name : output name)')
-        return
-
-    processor.message = requested_name
-    com.send_message(processor.message, com.socket)
-    response = com.receive_message(com.socket)
-
-    try:
-        with open(output_name, 'wb') as file:
-            file.write(response['msg'])
-    except Exception as error:
-        print(error)
-
-
-def send_file():
-    try:
-        requested_name = processor.message['msg'].split(' ')[0]
-        output_name = processor.message['msg'].split(' ')[1]
-    except IndexError:
-        print('invalid prompt, try (requested name : output name)')
-        return
-    processor.message = output_name
-    com.send_message(processor.message, com.socket)
-    try:
-        with open(requested_name, 'rb') as file:
-            bytes_to_send = file.read()
-    except FileNotFoundError:
-        print('file doesnt exist')
-        return
-    processor.message = bytes_to_send
-    com.send_message(processor.message, com.socket)
-
 
 def main() -> None:
     """
@@ -111,9 +73,6 @@ def main() -> None:
         processor.message = input('order:')
 
         processor.process_msg()
-        if processor.tt_called:
-            com.socket.settimeout(processor.tt_called)
-            processor.tt_called = False
         if not processor.message_to_send:
             continue
         if not processor.flags or processor.flags['target'] == com.username:
@@ -126,16 +85,11 @@ def main() -> None:
 
                 response = com.receive_message(com.socket)
 
-                if response is not None and response['flags']['type'] != 'SPAM':
+                if response is not None:
                     print(response['msg'])
             continue
 
-        if processor.flags['type'] == 'REQUEST':
-            request_file()
-        elif processor.flags['type'] == 'SEND':
-            send_file()
-        else:
-            text_traffic()
+        text_traffic()
 
 
 com, processor = boot()

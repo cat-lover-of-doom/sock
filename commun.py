@@ -143,10 +143,43 @@ class server(communicator):
             return
 
         if message['flags']['type'] == 'LOGS':
+            
             with open('server_logs.log', 'r') as file:
-                lines_of_log = file.read()
+                lines_of_log = file.readlines()
 
-            self.send_message({'msg':lines_of_log}, notified_socket)
+            output_lines = []
+
+            try:
+                start_bound, end_bound = message['msg'].split(' ')
+                if end_bound != 'END':
+                    start_bound, end_bound = int(start_bound), int(end_bound)
+
+                    if end_bound > len(lines_of_log):
+                        logger.log(
+                            logging.INFO, f'end_bound was bigger than lenght of log ({end_bound > {len(lines_of_log)}})')
+                        return
+                else:
+                    start_bound = int(start_bound)
+                    end_bound = len(lines_of_log)
+
+
+                logger.log(logging.INFO,
+                           f'handling logs request with bounds ({start_bound}, {end_bound})')
+
+            except Exception:
+                self.send_message({'msg':'invalid prompt given to logs'}, notified_socket)
+                return
+
+
+            
+            for index, line in enumerate(lines_of_log):
+                if index < start_bound:
+                    continue
+                if index <= end_bound:
+                   output_lines.append(line) 
+
+
+            self.send_message({'msg':''.join(output_lines)}, notified_socket)
             return
 
         # unused pylint: disable=logging-fstring-interpolation

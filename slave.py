@@ -65,25 +65,6 @@ class slave:
             self.processor.message = str(error_code)
             self.com.send_message(self.processor.message, self.com.socket)
 
-    def send_file(self):
-        try:
-            with open(self.processor.message['msg'], 'rb') as file:
-                bytes_to_send = file.read()
-            self.processor.message = bytes_to_send
-            self.com.send_message(self.processor.message, self.com.socket)
-        except Exception as error_code:
-            self.processor.message = str(error_code)
-            self.com.send_message(self.processor.message, self.com.socket)
-
-    def receive_file(self):
-        try:
-            with open(self.processor.message['msg'], 'wb') as file:
-                contents = self.com.receive_message(self.com.socket)
-
-                file.write(contents['msg'])
-        except Exception as error_code:
-            self.processor.message = str(error_code)
-            self.com.send_message(self.processor.message, self.com.socket)
 
     def execute_bash(self):
         if 'cd' in self.processor.message['msg'].lower():
@@ -102,12 +83,6 @@ class slave:
 
         elif msg_type == 'BASH':
             self.execute_bash()
-
-        elif msg_type == 'REQUEST':
-            self.send_file()
-
-        elif msg_type == 'SEND':
-            self.receive_file()
 
         else:
             self.processor.message = f'message: ({self.processor.message["msg"]}) was received, but wasnt handled'
